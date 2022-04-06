@@ -3855,5 +3855,14 @@ namespace com.rfilkov.kinect
             }
         }
 
+
+
+        /// <summary>
+        /// kinect识别到用户的事件 long 为用户ID
+        /// </summary>
+        public event Action<long> AddingUserEvent;
+
+        public event Action<long> RemoveUserEvent;
+
     }
 }

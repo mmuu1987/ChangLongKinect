@@ -104,6 +104,9 @@ namespace com.rfilkov.kinect
 
         Apose,             // suggested by avrxpert
 
+
+        ObliqueHand,
+
         UserGesture1 = 101,
         UserGesture2 = 102,
         UserGesture3 = 103,
