@@ -55,6 +55,10 @@ namespace com.rfilkov.components
         [Tooltip("GUI-Text to display step-info messages.")]
         public UnityEngine.UI.Text stepInfoText;
 
+        /// <summary>
+        /// 选择需要判断的姿势
+        /// </summary>
+        public int SelectIndex = 0;
 
         // current motion-step parameters
         private int stepIndex = -1;
@@ -218,6 +222,47 @@ namespace com.rfilkov.components
             }
         }
 
+        public void ResetMotionCheckParams(int index)
+        {
+            motionStartTime = Time.realtimeSinceStartup;
+            nextCheckTime = 0f;
+
+            stepIndex = index-1;
+            stepValid = true;
+
+            stepStartTime = 0f;
+            stepEndTime = 0f;
+            stepCheckInt = 0f;
+
+            // reset step matching
+            stepMatchPercent = 0f;
+            stepNumberChecks = 0;
+
+            lastDetectorTime = 0f;
+            lastDetectorPoseMatch = 0f;
+
+            // reset motion points
+            currentPoints = 0;
+            maxPoints = 0;
+
+            // do some checks
+            if (motionStepTimes.Count == 0)
+            {
+                Debug.LogError("Please add some values to the moving-step times lists.");
+            }
+
+            // clear the info-text
+            if (stepInfoText != null)
+            {
+                stepInfoText.text = initialStepInfo;
+            }
+
+            if (motionInfoText != null)
+            {
+                motionInfoText.text = initialMotionInfo;
+            }
+        }
+
 
         void Awake()
         {
@@ -241,7 +286,9 @@ namespace com.rfilkov.components
             }
 
             // reset motion-check parameters
-            ResetMotionCheckParams();
+            // ResetMotionCheckParams();
+
+            ResetMotionCheckParams(-1);
         }
 
 

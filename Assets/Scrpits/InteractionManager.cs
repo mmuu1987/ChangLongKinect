@@ -7,6 +7,8 @@ using com.rfilkov.components;
 using com.rfilkov.kinect;
 using UnityEngine;
 using UnityEngine.Video;
+using LitJson;
+using UnityEngine.UI;
 
 public class InteractionManager : MonoBehaviour
 {
@@ -18,9 +20,9 @@ public class InteractionManager : MonoBehaviour
 
 
     /// <summary>
-    /// 是否是第一次识别
+    /// 是否是从待机画面中识别人物
     /// </summary>
-    private bool _isFirstDiscriminate = false;
+    private bool _isStandByDiscriminate = true;
 
 
     public bool IsUseStandby = false;
@@ -32,7 +34,32 @@ public class InteractionManager : MonoBehaviour
 
     public VideoPlayer VideoPlayMask;
 
-    
+
+    public MyMovingPoseManager myMovingPoseManager;
+
+    public Image handImage;
+
+    public Text InfoText;
+
+
+    private KinectManager kinectManager = null;
+
+    [Tooltip("Camera that will be used to overlay the 3D-objects over the background.")]
+    public Camera foregroundCamera;
+
+    private Rect backgroundRect = Rect.zero;
+
+    [Tooltip("Index of the player, tracked by this component. 0 means the 1st player, 1 - the 2nd one, 2 - the 3rd one, etc.")]
+    public int playerIndex = 0;
+
+    [Tooltip("Depth sensor index used for color camera overlay - 0 is the 1st one, 1 - the 2nd one, etc.")]
+    public int sensorIndex = 0;
+
+    [Tooltip("Scene object that will be used to represent the sensor's position and rotation in the scene.")]
+    public Transform sensorTransform;
+
+    private Vector3 _screenPos;
+
 
     private ulong _curId;
 
@@ -81,9 +108,19 @@ public class InteractionManager : MonoBehaviour
     private string path7_5;
 
 
-
+    private List<string> _pathList = new List<string>();
 
     public float StandbyTime = 7f;
+
+
+    /// <summary>
+    /// 播放完视频后，需要等待些许时间来让用户做姿势的时间
+    /// </summary>
+    public List<int> WaitIndex= new List<int>();
+    /// <summary>
+    /// 视频播放的定时器
+    /// </summary>
+    private Coroutine _videoCoroutine;
 
     private void Awake()
     {
@@ -101,6 +138,7 @@ public class InteractionManager : MonoBehaviour
     private void Start()
     {
 
+        #region 视频路径
         path1 = Application.streamingAssetsPath + "/01屏保影片/01海象屏保";
 
         path2 = Application.streamingAssetsPath + "/02暴风雪/02暴风雪";
@@ -113,19 +151,19 @@ public class InteractionManager : MonoBehaviour
 
         path4_1 = Application.streamingAssetsPath + "/04拍掌翻身/04-01海象上岸";
 
-        path4_1 = Application.streamingAssetsPath + "/04拍掌翻身/04-02海象待命状态";
+        path4_2 = Application.streamingAssetsPath + "/04拍掌翻身/04-02海象待命状态";
 
-        path4_1 = Application.streamingAssetsPath + "/04拍掌翻身/04-03海象翻身状态";
+        path4_3 = Application.streamingAssetsPath + "/04拍掌翻身/04-03海象翻身状态";
 
         path5_1 = Application.streamingAssetsPath + "/05拍掌翻身+抚摩/05-01机器人讲解海象";
 
-        path5_1 = Application.streamingAssetsPath + "/05拍掌翻身+抚摩/05-02海象待命状态";
+        path5_2 = Application.streamingAssetsPath + "/05拍掌翻身+抚摩/05-02海象待命状态";
 
-        path5_1 = Application.streamingAssetsPath + "/05拍掌翻身+抚摩/05-03海象翻身状态";
+        path5_3 = Application.streamingAssetsPath + "/05拍掌翻身+抚摩/05-03海象翻身状态";
 
-        path5_1 = Application.streamingAssetsPath + "/05拍掌翻身+抚摩/05-04海象待命状态";
+        path5_4 = Application.streamingAssetsPath + "/05拍掌翻身+抚摩/05-04海象待命状态";
 
-        path5_1 = Application.streamingAssetsPath + "/05拍掌翻身+抚摩/05-05海象双手拍肚皮";
+        path5_5 = Application.streamingAssetsPath + "/05拍掌翻身+抚摩/05-05海象双手拍肚皮";
 
         path6_1 = Application.streamingAssetsPath + "/06张嘴/06-01机器人讲解海象";
 
@@ -145,8 +183,150 @@ public class InteractionManager : MonoBehaviour
 
         path7_5 = Application.streamingAssetsPath + "/07来回游动/07-05海象30秒ending";
 
+
+        _pathList.Add(path1);
+        _pathList.Add(path2);
+        _pathList.Add(path3_1);
+        _pathList.Add(path3_2);
+        _pathList.Add(path3_3);
+        _pathList.Add(path4_1);
+        _pathList.Add(path4_2);
+        _pathList.Add(path4_3);
+        _pathList.Add(path5_1);
+        _pathList.Add(path5_2);
+        _pathList.Add(path5_3);
+        _pathList.Add(path5_4);
+        _pathList.Add(path5_5);
+        _pathList.Add(path6_1);
+        _pathList.Add(path6_2);
+        _pathList.Add(path6_3);
+        _pathList.Add(path6_4);
+        _pathList.Add(path7_1);
+        _pathList.Add(path7_2);
+        _pathList.Add(path7_3);
+        _pathList.Add(path7_4);
+        _pathList.Add(path7_5);
+     
+
+        #endregion
+
+
+
         KinectManager.Instance.userManager.OnUserAdded.AddListener(AddingUserEvent); 
         KinectManager.Instance.userManager.OnUserRemoved.AddListener(RemoveUserEvent);
+
+        myMovingPoseManager.DetectorEvent += MyMovingPoseManager_DetectorEvent;
+
+        VideoPlayer.prepareCompleted += VideoPlayer_prepareCompleted;
+
+        _curIndex = 0;
+        PlayVideo(_pathList[_curIndex]);
+
+        StandbyTime = (float)Configure.StandBy;
+
+        myMovingPoseManager.Init((float)Configure.CheckTime,(int)Configure.CheckCount, (float)Configure.CheckPercent);
+
+        kinectManager = KinectManager.Instance;
+        
+    }
+    /// <summary>
+    /// 姿势识别成功的事件
+    /// </summary>
+    /// <param name="obj"></param>
+    private void MyMovingPoseManager_DetectorEvent(string obj)
+    {
+       Debug.Log("识别姿势成功 "+obj);
+       InfoText.text = "进入这个阶段是识别姿势成功进入。";
+        myMovingPoseManager.StopAnimator();
+       StopAndNextPlay();
+    }
+
+    private void VideoPlayer_prepareCompleted(VideoPlayer source)
+    { 
+        
+        if (_curIndex == 0)
+        {
+
+            source.isLooping = true;
+            return;//待机视频不参与自动播放
+
+        }
+        source.isLooping = false;
+
+        if (_videoCoroutine != null) StopCoroutine(_videoCoroutine);
+
+        Debug.Log(VideoPlayer.length);
+
+        float addTime = 0f;//给用户增加判断姿势的时间
+
+        if (WaitIndex.Contains(_curIndex))
+        {
+
+            Debug.Log("等待的时间是 "+ Configure.WaitTime);
+             addTime = (float)Configure.WaitTime;
+
+        }
+
+
+        if (addTime > 0)//有增加时间，说明需要视频结束后判断手的位置或者识别用户姿势
+        {
+            if (_curIndex ==3)
+            {
+                StartHandPosCheck();
+            }
+          
+            else if (_curIndex == 6)
+            {
+                myMovingPoseManager.PlayAnimator("paizhang");
+            }
+            else if (_curIndex == 9)
+            {
+                myMovingPoseManager.PlayAnimator("paizhang");
+            }
+            else if (_curIndex == 11)
+            {
+                StartHandPosCheck();
+            }
+            else if (_curIndex == 15)
+            {
+                myMovingPoseManager.PlayAnimator("taishou");
+            }
+
+            else if (_curIndex == 18)
+            {
+                myMovingPoseManager.PlayAnimator("yaobai");
+            }
+        }
+
+        _videoCoroutine = StartCoroutine(GlobalSettings.WaitTime((float)VideoPlayer.length+ addTime, (() =>
+        {
+            InfoText.text = "进入这个阶段是自动进入不是触发动作或者位置进入。";
+            _isHandCheck = false;//暂停手势位置检测，因为时间到了
+
+            _curIndex++;
+          if (_curIndex >= _pathList.Count)//整个体验过程播放结束
+          {
+                StartStandby();
+          }
+          else
+          {
+              PlayVideo(_pathList[_curIndex]);
+          }
+         
+
+        })));
+    }
+
+    /// <summary>
+    /// 停止当前播放，并进入下一个视频
+    /// 
+    /// </summary>
+    public void StopAndNextPlay()
+    {   
+        StopVideo();
+        if (_videoCoroutine != null) StopCoroutine(_videoCoroutine);
+        _curIndex++;
+        PlayVideo(_pathList[_curIndex]);
     }
 
     public void PlayVideo(string path)
@@ -159,19 +339,37 @@ public class InteractionManager : MonoBehaviour
         VideoPlayer.Play();
     }
 
+    public void StopVideo()
+    {
+        VideoPlayMask.Stop();
+        VideoPlayer.Stop();
+    }
+
+    private int _curIndex;
+   
     private void AddingUserEvent(ulong obj,int id)
     {
-        bool isFirstDiscriminate = this._isFirstDiscriminate;
-        if (isFirstDiscriminate)
+        bool isFirstDiscriminate = this._isStandByDiscriminate;
+
+        Debug.Log("增加了用户");
+
+        if (isFirstDiscriminate)//从待机中恢复
         {
             base.StartCoroutine(this.CanceStandby(new Action(this.StartComputeStandby)));
-            this._isFirstDiscriminate = false;
-            Debug.Log("待机");
+            this._isStandByDiscriminate = false;
+            Debug.Log("待机结束");
+
+            //播放第二个待机界面，之后自动播放
+
+            _curIndex = 1;
+            PlayVideo(_pathList[_curIndex]);
+
+
         }
         else
         {
           
-            //Debug.Log("识别到人物");
+            Debug.Log("识别到人物");
            // this.userBodyBlender.ChangeBackGround(-1);
             this.StopComputeStandby();
             //this.CheckBodyHeight();
@@ -188,6 +386,8 @@ public class InteractionManager : MonoBehaviour
     {
        
      
+       
+
         this.StartComputeStandby();
 
         
@@ -200,6 +400,131 @@ public class InteractionManager : MonoBehaviour
     }
 
 
+    private Vector2 GetPos(KinectInterop.JointType jointType)
+    {
+        Vector2 screenPos = Vector3.one * 1000;
+
+
+        if (kinectManager && kinectManager.IsInitialized())
+        {
+            if (foregroundCamera)
+            {
+                // get the background rectangle (use the portrait background, if available)
+                backgroundRect = foregroundCamera.pixelRect;
+                PortraitBackground portraitBack = PortraitBackground.Instance;
+
+                if (portraitBack && portraitBack.enabled)
+                {
+                    backgroundRect = portraitBack.GetBackgroundRect();
+                }
+            }
+
+            // overlay the joint
+            ulong userId = kinectManager.GetUserIdByIndex(playerIndex);
+
+            int iJointIndex = (int)jointType;
+            if (kinectManager.IsJointTracked(userId, iJointIndex))
+            {
+                Vector3 posJoint = foregroundCamera ?
+                    kinectManager.GetJointPosColorOverlay(userId, iJointIndex, sensorIndex, foregroundCamera, backgroundRect) :
+                    sensorTransform ? kinectManager.GetJointKinectPosition(userId, iJointIndex, true) :
+                    kinectManager.GetJointPosition(userId, iJointIndex);
+
+                if (sensorTransform)
+                {
+                    posJoint = sensorTransform.TransformPoint(posJoint);
+                }
+
+                if (posJoint != Vector3.zero )
+                {
+
+                    screenPos = this.foregroundCamera.WorldToScreenPoint(posJoint);
+
+                 
+
+                    
+
+                }
+            }
+           
+
+        }
+
+        return screenPos;
+    }
+
+    private bool _isHandCheck = false;
+
+    private Vector3 _targetPos;
+    /// <summary>
+    /// 开始手部位置的检测
+    /// </summary>
+    public void StartHandPosCheck()
+    {
+
+        Debug.Log("开始手势检测");
+        _isHandCheck = true;
+
+        Vector3 pos;
+
+        if (_curIndex == 3)
+        {
+            pos = Configure.ScreenPosTarget3_02.ConvertVector3();
+        }
+        else
+        {
+            pos = Configure.ScreenPosTarget5_04.ConvertVector3();
+        }
+
+        Debug.Log("触摸屏幕的目标点为："+ pos);
+
+       
+        _targetPos = pos;
+
+        
+
+    }
+
+    private void Update()
+    {
+
+        EnterTarget();
+    }
+    /// <summary>
+    /// 手进入目标点的判断
+    /// </summary>
+    private void EnterTarget()
+    {
+
+        if (_isHandCheck)
+        {
+
+            Vector2 screenPos = GetPos(KinectInterop.JointType.HandLeft);
+
+            handImage.rectTransform.anchoredPosition = screenPos;
+
+
+            float d = Vector3.Distance(screenPos, _targetPos);
+
+            if (d <= 100)
+            {
+                Debug.Log("手进入了范围");
+
+                _isHandCheck = false;
+
+                StopAndNextPlay();
+
+                InfoText.text = "进入这个阶段是触发动作或者位置进入。";
+            }
+
+           
+        }
+
+       
+        //if()
+    }
+
+
     /// <summary>
     /// 取消待机
     /// </summary>
@@ -209,9 +534,9 @@ public class InteractionManager : MonoBehaviour
     {
         yield return new WaitForEndOfFrame();
        
-        KinectManager.Instance.ClearKinectUsers();
+        //KinectManager.Instance.ClearKinectUsers();
         this.StopComputeStandby();
-        KinectManager.Instance.playerCalibrationPose = GestureType.ObliqueHand;//ObliqueHand
+        //KinectManager.Instance.playerCalibrationPose = GestureType.ObliqueHand;//ObliqueHand
 
         bool flag = action != null;
         if (flag)
@@ -226,16 +551,15 @@ public class InteractionManager : MonoBehaviour
 
     private void StartComputeStandby()
     {
-        bool flag = !this.IsUseStandby;
-        if (!flag)
-        {
+      
+        
             bool flag2 = this._coroutine != null;
             if (flag2)
             {
                 base.StopCoroutine(this._coroutine);
             }
             this._coroutine = base.StartCoroutine(GlobalSettings.WaitTime(this.StandbyTime, new Action(this.StartStandby)));
-        }
+        
     }
 
     private void StopComputeStandby()
@@ -255,7 +579,10 @@ public class InteractionManager : MonoBehaviour
       
         KinectManager.Instance.playerCalibrationPose = GestureType.None;
         KinectManager.Instance.ClearKinectUsers();
-        this._isFirstDiscriminate = true;
+        if(_videoCoroutine!=null)StopCoroutine(_videoCoroutine);
+    
+        PlayVideo(_pathList[0]);
+        this._isStandByDiscriminate = true;
     }
 
     /// <summary>
@@ -275,7 +602,7 @@ public class InteractionManager : MonoBehaviour
 
             string str = Encoding.Default.GetString(bytes);
 
-            Configure = JsonUtility.FromJson<Configure>(str);
+            Configure = JsonMapper.ToObject<Configure>(str);
 
             if (Configure != null)
             {
@@ -301,7 +628,7 @@ public class InteractionManager : MonoBehaviour
     {
 
 
-        string str = JsonUtility.ToJson(Configure);
+        string str = JsonMapper.ToJson(Configure);
 
         byte[] bytes = Encoding.Default.GetBytes(str);
 
@@ -326,7 +653,12 @@ public class InteractionManager : MonoBehaviour
     {
         if (GUI.Button(new Rect(0f, 0f, 100f, 100f), "test"))
         {
-            PlayVideo(path1);
+           StopAndNextPlay();
+        }
+
+        if (GUI.Button(new Rect(100f, 0f, 100f, 100f), "test1"))
+        {
+            this.StartComputeStandby();
         }
     }
 #endif

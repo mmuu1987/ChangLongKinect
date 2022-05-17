@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/ChangLong.unity
+    guid: 01d934abf72acb34e8b6512c0171a4f5
   m_configObjects: {}

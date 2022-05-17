@@ -140,6 +140,8 @@ public static class GlobalSettings
         for (int i = 0; i < texs.Length; i++)
         {
 			UnityEngine.Object.Destroy(texs[i]);
+
+
         }
         Resources.UnloadUnusedAssets();
 
@@ -366,10 +368,67 @@ public class Configure
 	/// </summary>
 	public bool IsLoadCompleted;
 
-	
 
+	/// <summary>
+	/// 要求作出动作的的等待时间，过了这个时间则自动进入下一步
+	/// </summary>
+    public double WaitTime = 45;
 	public bool IsShowFPS;
 	
 
 	public double UnitySize = 512;
+
+	/// <summary>
+	/// 一次检测姿势的时间
+	/// </summary>
+    public double CheckTime = 1.5;
+
+	/// <summary>
+	/// 在CheckTime时间内检测的次数
+	/// </summary>
+	public double CheckCount = 3;
+
+	/// <summary>
+	/// 检测通过的比率
+	/// </summary>
+    public double CheckPercent = 0.8;
+
+    public JsonVector3 ScreenPosTarget3_02;
+
+
+   
+
+    public JsonVector3 ScreenPosTarget5_04;
+
+
+    
+
+	public Configure()
+    {
+        ScreenPosTarget3_02 = new JsonVector3();
+
+        ScreenPosTarget5_04 = new JsonVector3();
+
+	}
+}
+
+public class JsonVector3
+{
+    public double X;
+
+    public double Y;
+
+    public double Z;
+
+    public JsonVector3()
+    {
+        X = 0;
+        Y = 0;
+        Z = 0;
+    }
+
+    public Vector3 ConvertVector3()
+    {
+		return new Vector3((float)X, (float)Y, (float)Z);
+    }
 }
