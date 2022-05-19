@@ -219,6 +219,8 @@ public class InteractionManager : MonoBehaviour
 
         VideoPlayer.prepareCompleted += VideoPlayer_prepareCompleted;
 
+        TCPUDPSocket.Instance.RecevieDataEvent += Instance_RecevieDataEvent;
+
         _curIndex = 0;
         PlayVideo(_pathList[_curIndex]);
 
@@ -229,6 +231,44 @@ public class InteractionManager : MonoBehaviour
         kinectManager = KinectManager.Instance;
         
     }
+
+    private void Instance_RecevieDataEvent(string obj)
+    {
+       Debug.LogError("收到了中控发来的消息 : "+obj);
+
+       switch (obj)
+       {
+            case "Skip":
+                SkipState();
+                break;
+            case "StandBy":
+                StartStandby();
+                break;
+            default:
+                Debug.LogError("接收到不正确的指令");
+                break;
+       }
+
+    }
+    /// <summary>
+    /// 跳过该状态，进入下一个状态，如果是待机视频的话
+    /// </summary>
+    public void SkipState()
+    {
+
+
+        base.StartCoroutine(this.CanceStandby(new Action(this.StartComputeStandby)));
+        this._isStandByDiscriminate = false;
+        Debug.Log("待机结束");
+
+        //播放第二个待机界面，之后自动播放
+
+        _curIndex = 2;
+        PlayVideo(_pathList[_curIndex]);
+
+      
+    }
+
     /// <summary>
     /// 姿势识别成功的事件
     /// </summary>
@@ -398,6 +438,8 @@ public class InteractionManager : MonoBehaviour
             this._curId = 0;
         }
     }
+
+
 
 
     private Vector2 GetPos(KinectInterop.JointType jointType)
@@ -619,6 +661,7 @@ public class InteractionManager : MonoBehaviour
         Configure.StayCamTime = 3f;
         Configure.UnitySize = 512;
         Configure.IsShowFPS = false;
+        Configure.UDPReceivePort = 6000;
         SaveConfiugre(path, true);
     }
     /// <summary>
@@ -653,12 +696,12 @@ public class InteractionManager : MonoBehaviour
     {
         if (GUI.Button(new Rect(0f, 0f, 100f, 100f), "test"))
         {
-           StopAndNextPlay();
+            SkipState();
         }
 
         if (GUI.Button(new Rect(100f, 0f, 100f, 100f), "test1"))
         {
-            this.StartComputeStandby();
+            StartStandby();
         }
     }
 #endif

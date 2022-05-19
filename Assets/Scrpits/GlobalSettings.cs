@@ -384,6 +384,11 @@ public class Configure
     public double CheckTime = 1.5;
 
 	/// <summary>
+	/// UDP接收的端口
+	/// </summary>
+    public double UDPReceivePort=6000;
+
+	/// <summary>
 	/// 在CheckTime时间内检测的次数
 	/// </summary>
 	public double CheckCount = 3;
