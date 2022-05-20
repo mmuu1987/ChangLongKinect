@@ -954,7 +954,7 @@ MonoBehaviour:
   myMovingPoseManager: {fileID: 914103593}
   handImage: {fileID: 280955666}
   InfoText: {fileID: 371437189}
-  tipImage: {fileID: 0}
+  tipImage: {fileID: 1458210766}
   foregroundCamera: {fileID: 1104360806}
   playerIndex: 0
   sensorIndex: 0

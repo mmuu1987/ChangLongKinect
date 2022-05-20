@@ -135,6 +135,8 @@ public class InteractionManager : MonoBehaviour
         {
             LoadConfigure();
         }
+
+        Screen.SetResolution(2560,1440,true);
     }
 
     private void Start()
