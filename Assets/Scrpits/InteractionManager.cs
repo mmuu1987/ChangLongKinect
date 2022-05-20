@@ -43,6 +43,10 @@ public class InteractionManager : MonoBehaviour
 
     public RawImage tipImage;
 
+    /// <summary>
+    /// 提示手的位置的图片  
+    /// </summary>
+    public Image handTipImage;
 
     private KinectManager kinectManager = null;
 
@@ -235,7 +239,7 @@ public class InteractionManager : MonoBehaviour
         kinectManager = KinectManager.Instance;
 
         tipImage.gameObject.SetActive(false);
-
+        handTipImage.gameObject.SetActive(false);
     }
 
     private void Instance_RecevieDataEvent(string obj)
@@ -313,36 +317,45 @@ public class InteractionManager : MonoBehaviour
 
         }
 
+        handTipImage.gameObject.SetActive(false);
+        tipImage.gameObject.SetActive(false);
 
         if (addTime > 0)//有增加时间，说明需要视频结束后判断手的位置或者识别用户姿势
         {
 
-            tipImage.gameObject.SetActive(true);
+         
             if (_curIndex ==3)
             {
+
                 StartHandPosCheck();
+                handTipImage.gameObject.SetActive(true);
             }
           
             else if (_curIndex == 6)
             {
                 myMovingPoseManager.PlayAnimator("paizhang");
+                tipImage.gameObject.SetActive(true);
             }
             else if (_curIndex == 9)
             {
                 myMovingPoseManager.PlayAnimator("paizhang");
+                tipImage.gameObject.SetActive(true);
             }
             else if (_curIndex == 11)
             {
                 StartHandPosCheck();
+                handTipImage.gameObject.SetActive(true);
             }
             else if (_curIndex == 15)
             {
                 myMovingPoseManager.PlayAnimator("taishou");
+                tipImage.gameObject.SetActive(true);
             }
 
             else if (_curIndex == 18)
             {
                 myMovingPoseManager.PlayAnimator("yaobai");
+                tipImage.gameObject.SetActive(true);
             }
         }
 
@@ -350,7 +363,7 @@ public class InteractionManager : MonoBehaviour
         {
             InfoText.text = "自动进入。";
             myMovingPoseManager.StopAnimator();//无论何种方式进入，都停止动画播放
-            tipImage.gameObject.SetActive(false);
+           
             _isHandCheck = false;//暂停手势位置检测，因为时间到了
 
             _curIndex++;
