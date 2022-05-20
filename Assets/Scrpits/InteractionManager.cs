@@ -41,6 +41,8 @@ public class InteractionManager : MonoBehaviour
 
     public Text InfoText;
 
+    public RawImage tipImage;
+
 
     private KinectManager kinectManager = null;
 
@@ -229,7 +231,9 @@ public class InteractionManager : MonoBehaviour
         myMovingPoseManager.Init((float)Configure.CheckTime,(int)Configure.CheckCount, (float)Configure.CheckPercent);
 
         kinectManager = KinectManager.Instance;
-        
+
+        tipImage.gameObject.SetActive(false);
+
     }
 
     private void Instance_RecevieDataEvent(string obj)
@@ -276,8 +280,8 @@ public class InteractionManager : MonoBehaviour
     private void MyMovingPoseManager_DetectorEvent(string obj)
     {
        Debug.Log("识别姿势成功 "+obj);
-       InfoText.text = "进入这个阶段是识别姿势成功进入。";
-        myMovingPoseManager.StopAnimator();
+       InfoText.text = "识别进入。";
+       myMovingPoseManager.StopAnimator();
        StopAndNextPlay();
     }
 
@@ -310,6 +314,8 @@ public class InteractionManager : MonoBehaviour
 
         if (addTime > 0)//有增加时间，说明需要视频结束后判断手的位置或者识别用户姿势
         {
+
+            tipImage.gameObject.SetActive(true);
             if (_curIndex ==3)
             {
                 StartHandPosCheck();
@@ -340,7 +346,9 @@ public class InteractionManager : MonoBehaviour
 
         _videoCoroutine = StartCoroutine(GlobalSettings.WaitTime((float)VideoPlayer.length+ addTime, (() =>
         {
-            InfoText.text = "进入这个阶段是自动进入不是触发动作或者位置进入。";
+            InfoText.text = "自动进入。";
+            myMovingPoseManager.StopAnimator();//无论何种方式进入，都停止动画播放
+            tipImage.gameObject.SetActive(false);
             _isHandCheck = false;//暂停手势位置检测，因为时间到了
 
             _curIndex++;
@@ -556,7 +564,7 @@ public class InteractionManager : MonoBehaviour
 
                 StopAndNextPlay();
 
-                InfoText.text = "进入这个阶段是触发动作或者位置进入。";
+               // InfoText.text = "识别进入。";
             }
 
            

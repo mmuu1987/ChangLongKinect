@@ -11,13 +11,13 @@
   "CheckCount": 3.0,
   "CheckPercent": 0.8,
   "ScreenPosTarget3_02": {
-    "X": 0.0,
-    "Y": 0.0,
+    "X": 520.0,
+    "Y": 628.0,
     "Z": 0.0
   },
   "ScreenPosTarget5_04": {
-    "X": 0.0,
-    "Y": 0.0,
+    "X": 543.0,
+    "Y": 687.0,
     "Z": 0.0
   }
 }
