@@ -122,15 +122,15 @@ namespace com.rfilkov.components
 #if UNITY_EDITOR
         private void OnGUI()
         {
-            if (GUI.Button(new Rect(0f, 0f, 100f, 100f), "test"))
-            {
-                PlayAnimator("taishou");//PaiZhang
-            }
+            //if (GUI.Button(new Rect(0f, 0f, 100f, 100f), "test"))
+            //{
+            //    PlayAnimator("taishou");//PaiZhang
+            //}
 
-            if (GUI.Button(new Rect(100f, 0f, 100f, 100f), "test"))
-            {
-                PlayAnimator("PaiZhang");//PaiZhang
-            }
+            //if (GUI.Button(new Rect(100f, 0f, 100f, 100f), "test"))
+            //{
+            //    PlayAnimator("PaiZhang");//PaiZhang
+            //}
         }
 #endif
     }

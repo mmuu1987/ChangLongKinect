@@ -361,7 +361,8 @@ public class InteractionManager : MonoBehaviour
 
         _videoCoroutine = StartCoroutine(GlobalSettings.WaitTime((float)VideoPlayer.length+ addTime, (() =>
         {
-            InfoText.text = "自动进入。";
+
+            InfoText.text = "自动进入";
             myMovingPoseManager.StopAnimator();//无论何种方式进入，都停止动画播放
            
             _isHandCheck = false;//暂停手势位置检测，因为时间到了
@@ -579,7 +580,7 @@ public class InteractionManager : MonoBehaviour
 
                 StopAndNextPlay();
 
-               // InfoText.text = "识别进入。";
+                InfoText.text = "识别进入。";
             }
 
            
@@ -725,6 +726,11 @@ public class InteractionManager : MonoBehaviour
         if (GUI.Button(new Rect(100f, 0f, 100f, 100f), "test1"))
         {
             StartStandby();
+        }
+
+        if (GUI.Button(new Rect(200f, 0f, 100f, 100f), "test1"))
+        {
+            StopAndNextPlay();
         }
     }
 #endif

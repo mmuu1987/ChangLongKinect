@@ -765,7 +765,6 @@ namespace com.rfilkov.kinect
         // applies the sensor-pose update to transform position & rotation, if needed
         protected void ApplySensorPoseUpdate(KinectManager kinectManager)
         {
-           
             if (kinectManager.getPoseFrames != KinectManager.PoseUsageType.RawPoseData)
             {
                 switch (kinectManager.getPoseFrames)
