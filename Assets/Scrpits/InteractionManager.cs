@@ -298,10 +298,13 @@ public class InteractionManager : MonoBehaviour
         {
 
             source.isLooping = true;
+            VideoPlayMask.isLooping = true;
+
             return;//待机视频不参与自动播放
 
         }
         source.isLooping = false;
+        VideoPlayMask.isLooping = false;
 
         if (_videoCoroutine != null) StopCoroutine(_videoCoroutine);
 
@@ -413,6 +416,7 @@ public class InteractionManager : MonoBehaviour
    
     private void AddingUserEvent(ulong obj,int id)
     {
+        if (Configure.IsAwaysStandBy) return;
         bool isFirstDiscriminate = this._isStandByDiscriminate;
 
         Debug.Log("增加了用户");

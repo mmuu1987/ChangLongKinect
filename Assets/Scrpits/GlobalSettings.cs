@@ -360,6 +360,11 @@ public class Configure
 	public double StandBy;
 
 	/// <summary>
+	/// 是否一致待机
+	/// </summary>
+    public bool IsAwaysStandBy = false;
+
+	/// <summary>
 	/// 扫描头像的时间
 	/// </summary>
 	public double StayCamTime;
@@ -368,7 +373,7 @@ public class Configure
 	/// </summary>
 	public bool IsLoadCompleted;
 
-
+	
 	/// <summary>
 	/// 要求作出动作的的等待时间，过了这个时间则自动进入下一步
 	/// </summary>
